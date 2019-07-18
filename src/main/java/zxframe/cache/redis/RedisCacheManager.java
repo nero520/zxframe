@@ -1,14 +1,9 @@
 package zxframe.cache.redis;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import zxframe.cache.mgr.CacheModelManager;
@@ -20,6 +15,10 @@ import zxframe.util.CServerUUID;
 import zxframe.util.JsonUtil;
 import zxframe.util.MathUtil;
 import zxframe.util.SerializeUtils;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class RedisCacheManager {
@@ -73,7 +72,12 @@ public class RedisCacheManager {
             nodes.add(new HostAndPort(ipPortPair[0].trim(), Integer.valueOf(ipPortPair[1].trim())));
         }
         //注意：这里超时时间不要太短，他会有超时重试机制。而且其他像httpclient、dubbo等RPC框架也要注意这点
-        cluster = new JedisCluster(nodes, 1000, 1000, 1, ZxFrameConfig.rPassword,config);
+		String rPassword = ZxFrameConfig.rPassword;
+		if(rPassword != null && !"".equals(rPassword)) {
+			cluster = new JedisCluster(nodes, 1000, 1000, 1, rPassword, config);
+		}else {
+			cluster = new JedisCluster(nodes, 1000, 1000, 1, config);
+		}
 	}
 	public void put(String group,String key,Object value) {
 		if(value==null) {
